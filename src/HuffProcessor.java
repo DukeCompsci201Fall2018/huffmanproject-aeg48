@@ -60,31 +60,26 @@ public class HuffProcessor {
 	public void decompress(BitInputStream in, BitOutputStream out){
 		
 		int bits = in.readBits(BITS_PER_INT);
-		if (bits != HUFF_TREE) {
+		if (bits != HUFF_TREE || bits == -1) {
 			throw new HuffException("illegal header starts with" + bits);
 		}
 		
 		HuffNode root = buildTree(in);
 		readCompressedBits(root, in, out);
 		out.close();
-		
 	}
 	
 	public HuffNode buildTree(BitInputStream in) {
-		while(true) {
-			int bit = in.readBits(1);
-			if (bit == -1) throw new HuffException("illegal headers starts with" + bit);
-			
-			if (bit == 0) {
-				HuffNode left = buildTree(in);
-				HuffNode right = buildTree(in);
-				return new HuffNode(0, 0, left, right);
-			}
-			
-			else {
-				int value = in.readBits(BITS_PER_WORD);
-				return new HuffNode(value, 0, null, null);
-			}
+		int bit = in.readBits(1);
+		if (bit == -1) throw new HuffException("illegal headers starts with" + bit);
+		if (bit == 0) {
+			HuffNode left = buildTree(in);
+			HuffNode right = buildTree(in);
+			return new HuffNode(0, 0, left, right);
+		}
+		else {
+			int value = in.readBits(BITS_PER_WORD + 1);
+			return new HuffNode(value, 0, null, null);
 		}
 	}
 	
@@ -100,10 +95,13 @@ public class HuffProcessor {
 				if (bits == 0) {
 					current = current.myLeft;
 				}
+				else {
+					current = current.myRight;
+				}
 				if (current.myLeft == null && current.myRight == null) {
 					if (current.myValue == PSEUDO_EOF) break;
 					else {
-						out.writeBits(BITS_PER_WORD, root.myValue);
+						out.writeBits(BITS_PER_WORD, current.myValue);
 						current = root;
 					}
 				}
