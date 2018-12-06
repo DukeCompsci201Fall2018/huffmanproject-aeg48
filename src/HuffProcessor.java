@@ -127,7 +127,6 @@ public class HuffProcessor {
 				break;
 			}
 			String code = codings[bits];
-			System.out.println(bits + ": " + code);
 			out.writeBits(code.length(), Integer.parseInt(code, 2));
 		}
 	}
