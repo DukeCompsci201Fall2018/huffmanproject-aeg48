@@ -49,6 +49,8 @@ public class HuffProcessor {
 		writeTreeHeader(root, out);
 		
 		in.reset();
+		writeCompressedBits(codings, in, out);
+		out.close();
 		
 	}
 	
@@ -56,10 +58,9 @@ public class HuffProcessor {
 		int[] allCounts = new int[ALPH_SIZE + 1];
 		while (true) {
 			int bits = in.readBits(BITS_PER_WORD);
-			if (bits == PSEUDO_EOF) {
-				allCounts[PSEUDO_EOF] = 1;
-				break;
-			}
+			allCounts[PSEUDO_EOF] = 1;
+			if (bits == PSEUDO_EOF) break;
+			
 			if (bits == -1) break;
 			else {
 				allCounts[bits] ++;
@@ -126,6 +127,7 @@ public class HuffProcessor {
 				break;
 			}
 			String code = codings[bits];
+			System.out.println(bits + ": " + code);
 			out.writeBits(code.length(), Integer.parseInt(code, 2));
 		}
 	}
